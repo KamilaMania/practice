@@ -1,11 +1,20 @@
 const express = require("express");
 const Sequelize = require("sequelize");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+
+const app = express();
+const port = 4000;
+
+const corsMiddleware = cors();
+app.use(corsMiddleware);
+
+const parserMiddleware = bodyParser.json();
+app.use(parserMiddleware);
 
 const sequelize = new Sequelize(
   "postgres://postgres:123@localhost:5432/postgres"
 );
-const app = express();
-const port = 4000;
 
 const Movie = sequelize.define("movie", {
   title: Sequelize.TEXT,
@@ -41,5 +50,52 @@ sequelize
     console.log(movie.toJSON());
   })
   .catch(console.error);
+
+//Get all movies
+app.get("/allmovies", (req, res) => {
+  Movie.findAll().then(result => {
+    res.send(result);
+  });
+});
+
+//Get one movie by title
+app.get("/allmovies/:title", (req, res) => {
+  Movie.findOne({ where: { title: req.params.title } }).then(result => {
+    res.send(result);
+  });
+});
+
+//Create new movie
+app.post("/createmovie", (req, res) => {
+  Movie.create({
+    title: req.body.title,
+    yearOfRelease: req.body.yearOfRelease,
+    synopsis: req.body.synopsis
+  });
+  res.json({ message: "movie successfully created" });
+});
+
+//updating a movie title by id
+app.put("/updatemovie/:id", (req, res) => {
+  Movie.findOne({ where: { id: req.params.id } }).then(movie => {
+    console.log(movie);
+    if (movie) {
+      movie
+        .update({
+          title: req.body.title
+        })
+        .then(function() {
+          res.send("successful updated");
+        });
+    }
+  });
+});
+
+// delete movie
+app.delete("/deletemovie/:id", (req, res) => {
+  Movie.destroy({ where: { id: req.params.id } }).then(() => {
+    res.json({ message: "movie successfully deleted" });
+  });
+});
 
 app.listen(port, () => console.log("listening on port " + port));
