@@ -98,4 +98,23 @@ app.delete("/deletemovie/:id", (req, res) => {
   });
 });
 
+//Pagination
+app.get("/allmoviespag", (req, res) => {
+  let limit = req.query.limit || 3;
+  let offset = req.query.offset || 1;
+  Movie.findAndCountAll({
+    offset: offset,
+    limit: limit
+  }).then(result => {
+    let total = result.count;
+    let movies = result.rows;
+    let response = {
+      data: movies,
+      total: total
+    };
+
+    res.json(response);
+  });
+});
+
 app.listen(port, () => console.log("listening on port " + port));
