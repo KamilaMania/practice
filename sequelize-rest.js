@@ -49,34 +49,46 @@ sequelize
   .then(movie => {
     console.log(movie.toJSON());
   })
-  .catch(console.error);
+  .catch(error => console.log(error));
 
 //Get all movies
-app.get("/allmovies", (req, res) => {
-  Movie.findAll().then(result => {
-    res.send(result);
-  });
+app.get("/allmovies", (req, res, next) => {
+  Movie.findAll()
+    .then(result => {
+      //throw "go to error!";
+      res.send(result);
+    })
+    .catch(error => next(error));
 });
 
-//Get one movie by title
-app.get("/allmovies/:title", (req, res) => {
-  Movie.findOne({ where: { title: req.params.title } }).then(result => {
-    res.send(result);
-  });
+//Get one movie by id
+app.get("/allmovies/:id", (req, res, next) => {
+  Movie.findOne({ where: { id: req.params.id } })
+    .then(result => {
+      if (result) {
+        res.send(result);
+      } else {
+        res.send("no results founds");
+      }
+    })
+    .catch(error => next(error));
 });
 
 //Create new movie
-app.post("/createmovie", (req, res) => {
+app.post("/createmovie", (req, res, next) => {
   Movie.create({
     title: req.body.title,
     yearOfRelease: req.body.yearOfRelease,
     synopsis: req.body.synopsis
-  });
-  res.json({ message: "movie successfully created" });
+  })
+    .then(() => {
+      res.json({ message: "movie successfully created" });
+    })
+    .catch(error => next(error));
 });
 
 //updating a movie title by id
-app.put("/updatemovie/:id", (req, res) => {
+app.put("/updatemovie/:id", (req, res, next) => {
   Movie.findOne({ where: { id: req.params.id } }).then(movie => {
     console.log(movie);
     if (movie) {
@@ -86,35 +98,40 @@ app.put("/updatemovie/:id", (req, res) => {
         })
         .then(function() {
           res.send("successful updated");
-        });
+        })
+        .catch(error => next(error));
     }
   });
 });
 
 // delete movie
-app.delete("/deletemovie/:id", (req, res) => {
-  Movie.destroy({ where: { id: req.params.id } }).then(() => {
-    res.json({ message: "movie successfully deleted" });
-  });
+app.delete("/deletemovie/:id", (req, res, next) => {
+  Movie.destroy({ where: { id: req.params.id } })
+    .then(() => {
+      res.json({ message: "movie successfully deleted" });
+    })
+    .catch(error => next(error));
 });
-
+// new Promisse().catch().then().then().catch
 //Pagination
-app.get("/allmoviespag", (req, res) => {
+app.get("/allmoviespag", (req, res, next) => {
   let limit = req.query.limit || 3;
   let offset = req.query.offset || 1;
   Movie.findAndCountAll({
     offset: offset,
     limit: limit
-  }).then(result => {
-    let total = result.count;
-    let movies = result.rows;
-    let response = {
-      data: movies,
-      total: total
-    };
+  })
+    .then(result => {
+      let total = result.count;
+      let movies = result.rows;
+      let response = {
+        data: movies,
+        total: total
+      };
 
-    res.json(response);
-  });
+      res.json(response);
+    })
+    .catch(error => next(error));
 });
 
 app.listen(port, () => console.log("listening on port " + port));
