@@ -12,7 +12,6 @@ app.use(parserMiddleware);
 let count = 0;
 
 const countMiddleware = function(req, res, next) {
-  console.log(req.originalUrl);
   if (count <= 5 && req.originalUrl === "/messages") {
     req.allowedRequest = true;
     count++;
